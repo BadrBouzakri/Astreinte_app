@@ -1,5 +1,5 @@
-# Étape 1: Build de l'application React
-FROM node:18-alpine as build
+# Utiliser Node.js comme base
+FROM node:18-alpine
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -7,26 +7,24 @@ WORKDIR /app
 # Copier les fichiers de dépendances
 COPY package*.json ./
 
-# Installer les dépendances
-RUN npm install --production=false
+# Installer toutes les dépendances (dev + prod)
+RUN npm install
 
-# Copier le code source
+# Copier tout le code source
 COPY . .
 
-# Build de l'application pour la production
+# Build de l'application React pour la production
 RUN npm run build
 
-# Étape 2: Serveur de production avec Nginx
-FROM nginx:alpine
+# Exposer le port 3001 (port du serveur Node.js)
+EXPOSE 3001
 
-# Copier les fichiers buildés vers Nginx
-COPY --from=build /app/build /usr/share/nginx/html
+# Variables d'environnement
+ENV NODE_ENV=production
+ENV PORT=3001
 
-# Copier la configuration Nginx personnalisée
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Créer le répertoire pour les données
+RUN mkdir -p /app/data
 
-# Exposer le port 80
-EXPOSE 80
-
-# Démarrer Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Démarrer le serveur Node.js
+CMD ["node", "server.js"]
