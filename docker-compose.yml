@@ -7,17 +7,20 @@ services:
       dockerfile: Dockerfile
     container_name: astreinte-app
     ports:
-      - "3000:80"
+      - "3000:3001"
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - PORT=3001
     volumes:
-      # Volume pour persister les logs Nginx (optionnel)
-      - ./logs:/var/log/nginx
+      # Volume pour persister les données JSON
+      - ./data:/app/data
+      # Volume pour les logs (optionnel)
+      - ./logs:/app/logs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.astreinte.rule=Host(`astreinte.localhost`)"
-      - "traefik.http.services.astreinte.loadbalancer.server.port=80"
+      - "traefik.http.services.astreinte.loadbalancer.server.port=3001"
     networks:
       - astreinte-network
 
