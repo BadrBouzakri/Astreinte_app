@@ -64,13 +64,65 @@ function App() {
     return `${heures}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  // Calcul du total hebdomadaire
-  const calculerTotalSemaine = () => {
+  // Calculer le début et la fin de la semaine actuelle (Lundi à Dimanche)
+  const obtenirSemaineActuelle = () => {
+    const aujourd_hui = new Date();
+    const jourSemaine = aujourd_hui.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+    const joursDepuisLundi = jourSemaine === 0 ? 6 : jourSemaine - 1; // Ajuster pour que Lundi = 0
+    
+    const debutSemaine = new Date(aujourd_hui);
+    debutSemaine.setDate(aujourd_hui.getDate() - joursDepuisLundi);
+    
+    const finSemaine = new Date(debutSemaine);
+    finSemaine.setDate(debutSemaine.getDate() + 6);
+    
+    return {
+      debut: debutSemaine.toISOString().split('T')[0],
+      fin: finSemaine.toISOString().split('T')[0]
+    };
+  };
+
+  // Calculer le début et la fin du mois actuel
+  const obtenirMoisActuel = () => {
+    const aujourd_hui = new Date();
+    const debutMois = new Date(aujourd_hui.getFullYear(), aujourd_hui.getMonth(), 1);
+    const finMois = new Date(aujourd_hui.getFullYear(), aujourd_hui.getMonth() + 1, 0);
+    
+    return {
+      debut: debutMois.toISOString().split('T')[0],
+      fin: finMois.toISOString().split('T')[0]
+    };
+  };
+
+  // Calcul du total de la semaine actuelle
+  const calculerTotalSemaineActuelle = () => {
+    const { debut, fin } = obtenirSemaineActuelle();
     let totalMinutes = 0;
+    
     interventions.forEach(intervention => {
-      const duree = calculerDuree(intervention.heureDebut, intervention.heureFin);
-      const [h, m] = duree.split(':').map(Number);
-      totalMinutes += h * 60 + m;
+      if (intervention.date >= debut && intervention.date <= fin) {
+        const duree = calculerDuree(intervention.heureDebut, intervention.heureFin);
+        const [h, m] = duree.split(':').map(Number);
+        totalMinutes += h * 60 + m;
+      }
+    });
+    
+    const heures = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${heures}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  // Calcul du total du mois actuel
+  const calculerTotalMoisActuel = () => {
+    const { debut, fin } = obtenirMoisActuel();
+    let totalMinutes = 0;
+    
+    interventions.forEach(intervention => {
+      if (intervention.date >= debut && intervention.date <= fin) {
+        const duree = calculerDuree(intervention.heureDebut, intervention.heureFin);
+        const [h, m] = duree.split(':').map(Number);
+        totalMinutes += h * 60 + m;
+      }
     });
     
     const heures = Math.floor(totalMinutes / 60);
@@ -171,16 +223,16 @@ function App() {
         {/* Statistiques */}
         <div className="stats-grid">
           <div className="stat-card stat-blue">
-            <h3>Total Semaine</h3>
-            <p className="stat-value">{calculerTotalSemaine()}</p>
+            <h3>📊 Total Semaine Actuelle</h3>
+            <p className="stat-value">{calculerTotalSemaineActuelle()}</p>
           </div>
           <div className="stat-card stat-green">
-            <h3>Interventions</h3>
-            <p className="stat-value">{interventions.length}</p>
+            <h3>📈 Total Mois Actuel</h3>
+            <p className="stat-value">{calculerTotalMoisActuel()}</p>
           </div>
           <div className="stat-card stat-purple">
-            <h3>Jours Actifs</h3>
-            <p className="stat-value">{new Set(interventions.map(i => i.date)).size}</p>
+            <h3>📋 Total Interventions</h3>
+            <p className="stat-value">{interventions.length}</p>
           </div>
         </div>
 
