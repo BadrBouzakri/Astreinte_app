@@ -1,7 +1,7 @@
 {
   "name": "astreinte-app",
   "version": "1.0.0",
-  "description": "Application de gestion des heures d'astreinte",
+  "description": "Application de gestion des heures d'astreinte avec backend Node.js",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -10,10 +10,13 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node server.js",
+    "dev": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -43,7 +46,9 @@
     "heures",
     "tracking",
     "react",
-    "docker"
+    "docker",
+    "backend",
+    "api"
   ],
   "author": "BadrBouzakri",
   "license": "MIT"
