@@ -2,26 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  const [interventions, setInterventions] = useState([
-    {
-      id: 1,
-      date: '2025-06-05',
-      heureDebut: '14:30',
-      heureFin: '16:45',
-      type: 'Urgence',
-      description: 'Problème serveur principal',
-      observations: 'Résolu rapidement'
-    },
-    {
-      id: 2,
-      date: '2025-06-05',
-      heureDebut: '20:15',
-      heureFin: '21:30',
-      type: 'Maintenance',
-      description: 'Problème réseau',
-      observations: 'Nécessite suivi'
-    }
-  ]);
+  const [interventions, setInterventions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [newIntervention, setNewIntervention] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -33,6 +16,35 @@ function App() {
   });
 
   const [editingId, setEditingId] = useState(null);
+
+  // API URL (s'adapte automatiquement à l'environnement)
+  const API_URL = process.env.NODE_ENV === 'production' 
+    ? '/api/interventions' 
+    : 'http://localhost:3001/api/interventions';
+
+  // Charger les interventions au démarrage
+  useEffect(() => {
+    loadInterventions();
+  }, []);
+
+  // Charger les interventions depuis l'API
+  const loadInterventions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error('Erreur de chargement des données');
+      }
+      const data = await response.json();
+      setInterventions(data);
+      setError(null);
+    } catch (err) {
+      setError('Impossible de charger les interventions');
+      console.error('Erreur:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calcul de la durée en heures:minutes
   const calculerDuree = (debut, fin) => {
@@ -137,31 +149,60 @@ function App() {
   };
 
   // Ajouter une intervention
-  const ajouterIntervention = () => {
+  const ajouterIntervention = async () => {
     if (!newIntervention.heureDebut || !newIntervention.heureFin || !newIntervention.description) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    const nouvelleIntervention = {
-      ...newIntervention,
-      id: Date.now()
-    };
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newIntervention),
+      });
 
-    setInterventions([...interventions, nouvelleIntervention]);
-    setNewIntervention({
-      date: new Date().toISOString().split('T')[0],
-      heureDebut: '',
-      heureFin: '',
-      type: 'Urgence',
-      description: '',
-      observations: ''
-    });
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'ajout');
+      }
+
+      const nouvelleDonnee = await response.json();
+      setInterventions([...interventions, nouvelleDonnee]);
+      setNewIntervention({
+        date: new Date().toISOString().split('T')[0],
+        heureDebut: '',
+        heureFin: '',
+        type: 'Urgence',
+        description: '',
+        observations: ''
+      });
+      
+      setError(null);
+    } catch (err) {
+      setError('Erreur lors de l\'ajout de l\'intervention');
+      console.error('Erreur:', err);
+    }
   };
 
   // Supprimer une intervention
-  const supprimerIntervention = (id) => {
-    setInterventions(interventions.filter(i => i.id !== id));
+  const supprimerIntervention = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
+
+      setInterventions(interventions.filter(i => i.id !== id));
+      setError(null);
+    } catch (err) {
+      setError('Erreur lors de la suppression');
+      console.error('Erreur:', err);
+    }
   };
 
   // Démarrer l'édition
@@ -171,19 +212,40 @@ function App() {
   };
 
   // Sauvegarder l'édition
-  const sauvegarderEdition = () => {
-    setInterventions(interventions.map(i => 
-      i.id === editingId ? {...newIntervention} : i
-    ));
-    setEditingId(null);
-    setNewIntervention({
-      date: new Date().toISOString().split('T')[0],
-      heureDebut: '',
-      heureFin: '',
-      type: 'Urgence',
-      description: '',
-      observations: ''
-    });
+  const sauvegarderEdition = async () => {
+    try {
+      const response = await fetch(`${API_URL}/${editingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newIntervention),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la modification');
+      }
+
+      const interventionModifiee = await response.json();
+      setInterventions(interventions.map(i => 
+        i.id === editingId ? interventionModifiee : i
+      ));
+      
+      setEditingId(null);
+      setNewIntervention({
+        date: new Date().toISOString().split('T')[0],
+        heureDebut: '',
+        heureFin: '',
+        type: 'Urgence',
+        description: '',
+        observations: ''
+      });
+      
+      setError(null);
+    } catch (err) {
+      setError('Erreur lors de la modification');
+      console.error('Erreur:', err);
+    }
   };
 
   // Exporter en CSV
@@ -210,15 +272,39 @@ function App() {
     a.click();
   };
 
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="container">
+          <div className="loading-state">
+            <h2>⏳ Chargement des données...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <div className="container">
         <div className="header">
           <h1>🕐 Application Heures d'Astreinte</h1>
-          <button onClick={exporterCSV} className="btn btn-export">
-            📊 Exporter CSV
-          </button>
+          <div className="header-actions">
+            <button onClick={loadInterventions} className="btn btn-refresh" title="Actualiser">
+              🔄 Actualiser
+            </button>
+            <button onClick={exporterCSV} className="btn btn-export">
+              📊 Exporter CSV
+            </button>
+          </div>
         </div>
+
+        {error && (
+          <div className="error-message">
+            ❌ {error}
+            <button onClick={loadInterventions} className="btn-retry">Réessayer</button>
+          </div>
+        )}
 
         {/* Statistiques */}
         <div className="stats-grid">
@@ -377,7 +463,7 @@ function App() {
           </table>
         </div>
 
-        {interventions.length === 0 && (
+        {interventions.length === 0 && !loading && (
           <div className="empty-state">
             <p>📅 Aucune intervention enregistrée</p>
             <p>Ajoutez votre première intervention ci-dessus</p>
