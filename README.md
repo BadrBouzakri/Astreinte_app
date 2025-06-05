@@ -1,22 +1,29 @@
 # 🕐 Astreinte App - Application de Gestion des Heures d'Astreinte
 
-Une application React moderne pour suivre et gérer vos heures d'astreinte, containerisée avec Docker pour un déploiement facile.
+Une application React moderne avec backend Node.js pour suivre et gérer vos heures d'astreinte, avec persistance des données en JSON et API REST complète.
 
 ## 🚀 Fonctionnalités
 
 - ✅ **Suivi en temps réel** des interventions d'astreinte
-- ✅ **Calcul automatique** des durées et totaux
+- ✅ **Calcul automatique** des durées et totaux par semaine/mois
 - ✅ **Interface moderne** et responsive
+- ✅ **API REST complète** (GET, POST, PUT, DELETE)
+- ✅ **Persistance des données** (fichier JSON sur serveur)
 - ✅ **Export CSV** des données
 - ✅ **Types d'interventions** prédéfinis
 - ✅ **Édition en ligne** des interventions
-- ✅ **Statistiques** en temps réel
+- ✅ **Statistiques intelligentes** (semaine actuelle, mois actuel)
+- ✅ **Données partagées** entre utilisateurs
+- ✅ **Gestion d'erreurs** avec retry automatique
 
 ## 🛠️ Technologies Utilisées
 
 - **Frontend**: React 18, CSS3
+- **Backend**: Node.js, Express
+- **API**: REST API avec JSON
+- **Stockage**: Fichier JSON persistant
 - **Build**: Create React App
-- **Containerisation**: Docker, Nginx
+- **Containerisation**: Docker
 - **Orchestration**: Docker Compose
 
 ## 📦 Installation et Déploiement
@@ -36,7 +43,7 @@ cd Astreinte_app
 ### 2. Déploiement avec Docker Compose (Recommandé)
 
 ```bash
-# Lancer l'application
+# Lancer l'application complète
 docker-compose up -d
 
 # Voir les logs
@@ -54,8 +61,10 @@ L'application sera accessible sur: **http://localhost:3000**
 # Build de l'image
 docker build -t astreinte-app .
 
-# Lancer le conteneur
-docker run -d -p 3000:80 --name astreinte-app astreinte-app
+# Lancer le conteneur avec volumes
+docker run -d -p 3000:3001 \
+  -v $(pwd)/data:/app/data \
+  --name astreinte-app astreinte-app
 
 # Voir les logs
 docker logs -f astreinte-app
@@ -70,15 +79,32 @@ docker stop astreinte-app && docker rm astreinte-app
 # Installer les dépendances
 npm install
 
-# Lancer en mode développement
-npm start
-
-# Build pour la production
+# Build de l'application React
 npm run build
 
-# Servir le build de production
-npm run serve
+# Lancer le serveur complet (API + Frontend)
+npm start
+
+# Ou pour le développement React uniquement
+npm run dev
 ```
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   Stockage      │
+│   React App     │◄──►│   Node.js API   │◄──►│   data.json     │
+│   Port 3000     │    │   Port 3001     │    │   Volume        │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### API Endpoints
+
+- `GET /api/interventions` - Récupérer toutes les interventions
+- `POST /api/interventions` - Créer une nouvelle intervention
+- `PUT /api/interventions/:id` - Modifier une intervention
+- `DELETE /api/interventions/:id` - Supprimer une intervention
 
 ## 🏗️ Structure du Projet
 
@@ -88,14 +114,16 @@ Astreinte_app/
 │   ├── index.html          # Template HTML principal
 │   └── manifest.json       # Manifest PWA
 ├── src/
-│   ├── App.js              # Composant principal React
+│   ├── App.js              # Frontend React avec API calls
 │   ├── App.css             # Styles de l'application
 │   ├── index.js            # Point d'entrée React
 │   └── index.css           # Styles globaux
+├── server.js               # Backend Node.js/Express + API REST
+├── data/                   # Répertoire de données (créé automatiquement)
+│   └── data.json           # Fichier de données persistantes
 ├── Dockerfile              # Configuration Docker
 ├── docker-compose.yml      # Configuration Docker Compose
-├── nginx.conf              # Configuration Nginx
-├── package.json            # Dépendances npm
+├── package.json            # Dépendances npm (backend + frontend)
 ├── .dockerignore           # Fichiers ignorés par Docker
 ├── .gitignore              # Fichiers ignorés par Git
 └── README.md               # Cette documentation
@@ -113,6 +141,7 @@ Astreinte_app/
    - **Observations** optionnelles
 
 2. Cliquez sur **"Ajouter Intervention"**
+3. Les données sont **automatiquement sauvegardées** sur le serveur
 
 ### Modifier une Intervention
 
@@ -120,30 +149,43 @@ Astreinte_app/
 2. Modifiez les informations dans le formulaire
 3. Cliquez sur **"Sauvegarder"**
 
+### Actualiser les Données
+
+1. Cliquez sur **"🔄 Actualiser"** pour recharger depuis le serveur
+2. Utile si plusieurs personnes utilisent l'application
+
 ### Exporter les Données
 
-1. Cliquez sur **"Exporter CSV"** en haut à droite
+1. Cliquez sur **"📊 Exporter CSV"** en haut à droite
 2. Le fichier se télécharge automatiquement
 3. Ouvrez-le dans Excel, Google Sheets ou tout autre tableur
 
 ### Statistiques Automatiques
 
 L'application calcule automatiquement :
+- **📊 Total Semaine Actuelle** (Lundi à Dimanche en cours)
+- **📈 Total Mois Actuel** (mois calendaire en cours)
+- **📋 Total Interventions** (nombre total)
 - **Durée de chaque intervention** (heure fin - heure début)
 - **Total journalier** (somme des interventions du même jour)
-- **Total hebdomadaire** (affiché dans le tableau de bord)
-- **Nombre d'interventions** et **jours actifs**
+
+## 💾 Persistance des Données
+
+- **Stockage**: Fichier `data/data.json` sur le serveur
+- **Partage**: Données accessibles à tous les utilisateurs
+- **Backup**: Le fichier JSON peut être sauvegardé facilement
+- **Migration**: Possibilité de migrer vers une vraie base de données plus tard
 
 ## 🔧 Configuration Avancée
 
 ### Variables d'Environnement
 
-Vous pouvez personnaliser l'application avec ces variables dans `docker-compose.yml` :
+```bash
+# Port du serveur (défaut: 3001)
+PORT=3001
 
-```yaml
-environment:
-  - NODE_ENV=production
-  - REACT_APP_TITLE=Mon Application Astreinte
+# Environnement (production/development)
+NODE_ENV=production
 ```
 
 ### Port Personnalisé
@@ -152,25 +194,24 @@ Pour changer le port d'accès, modifiez dans `docker-compose.yml` :
 
 ```yaml
 ports:
-  - "8080:80"  # Accès sur http://localhost:8080
+  - "8080:3001"  # Accès sur http://localhost:8080
 ```
 
 ### Volumes de Données
 
-Pour persister les logs Nginx :
-
 ```yaml
 volumes:
-  - ./logs:/var/log/nginx
+  - ./data:/app/data        # Données persistantes
+  - ./logs:/app/logs        # Logs applicatifs
 ```
 
 ## 🔒 Sécurité
 
 L'application inclut :
-- Headers de sécurité Nginx
-- Protection XSS
-- Compression Gzip
-- Cache optimisé pour les assets statiques
+- Validation des données côté serveur
+- Gestion d'erreurs robuste
+- API REST sécurisée
+- Gestion des CORS pour le développement
 
 ## 🚀 Déploiement en Production
 
@@ -178,8 +219,19 @@ L'application inclut :
 
 1. **Installer Docker et Docker Compose** sur votre serveur
 2. **Cloner le repository** sur le serveur
-3. **Configurer un reverse proxy** (Nginx, Traefik, etc.)
+3. **Configurer un reverse proxy** (Apache, Nginx, Traefik, etc.)
 4. **Utiliser HTTPS** avec Let's Encrypt
+
+### Configuration Apache2 (Reverse Proxy)
+
+```apache
+<VirtualHost *:80>
+    ServerName astreinte.mondomaine.com
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
+    ProxyPreserveHost On
+</VirtualHost>
+```
 
 ### Avec Traefik (inclus dans docker-compose.yml)
 
@@ -188,6 +240,31 @@ labels:
   - "traefik.enable=true"
   - "traefik.http.routers.astreinte.rule=Host(`astreinte.mondomaine.com`)"
   - "traefik.http.routers.astreinte.tls.certresolver=letsencrypt"
+```
+
+## 🛡️ Backup et Restauration
+
+### Backup
+
+```bash
+# Sauvegarder les données
+cp ./data/data.json ./backup/data-$(date +%Y%m%d-%H%M%S).json
+
+# Ou automatique avec cron
+0 2 * * * cp /path/to/astreinte/data/data.json /backup/astreinte-$(date +\%Y\%m\%d).json
+```
+
+### Restauration
+
+```bash
+# Arrêter l'application
+docker-compose down
+
+# Restaurer le fichier
+cp ./backup/data-20250605.json ./data/data.json
+
+# Relancer
+docker-compose up -d
 ```
 
 ## 🤝 Contribution
@@ -208,8 +285,8 @@ Pour toute question ou problème :
 
 1. **Consultez** cette documentation
 2. **Vérifiez** les logs Docker : `docker-compose logs`
-3. **Ouvrez** une issue sur GitHub
-4. **Contactez** l'équipe de développement
+3. **Vérifiez** l'API : `curl http://localhost:3000/api/interventions`
+4. **Ouvrez** une issue sur GitHub
 
 ## 🔄 Mise à Jour
 
@@ -226,21 +303,20 @@ git pull origin main
 docker-compose up -d --build
 ```
 
-## 📊 Capture d'Écran
-
-![Application Astreinte](https://via.placeholder.com/800x600/667eea/ffffff?text=🕐+Astreinte+App)
-
 ## 🎯 Roadmap
 
-- [ ] Authentification utilisateur
-- [ ] Base de données persistante
-- [ ] API REST
-- [ ] Notifications push
-- [ ] Mode sombre
-- [ ] Application mobile
+- [x] ✅ **API REST complète**
+- [x] ✅ **Persistance des données**
+- [x] ✅ **Calculs intelligents par période**
+- [ ] 🔄 **Authentification utilisateur**
+- [ ] 🔄 **Migration vers PostgreSQL**
+- [ ] 🔄 **Notifications push**
+- [ ] 🔄 **Mode sombre**
+- [ ] 🔄 **Application mobile PWA**
+- [ ] 🔄 **API de rapports avancés**
 
 ---
 
-**Développé avec ❤️ par BadrBouzakri** - Application de gestion des heures d'astreinte
+**Développé avec ❤️ par BadrBouzakri** - Application full-stack de gestion des heures d'astreinte
 
 ⭐ **N'oubliez pas de mettre une étoile si ce projet vous est utile !**
