@@ -45,6 +45,11 @@ body {
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
 /* Boutons */
 .btn {
   padding: 12px 24px;
@@ -86,6 +91,53 @@ body {
 
 .btn-export:hover {
   background-color: #2f855a;
+}
+
+.btn-refresh {
+  background-color: #4299e1;
+  color: white;
+}
+
+.btn-refresh:hover {
+  background-color: #3182ce;
+}
+
+/* États de chargement et d'erreur */
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #4a5568;
+}
+
+.loading-state h2 {
+  font-size: 1.5rem;
+  color: #2d3748;
+}
+
+.error-message {
+  background-color: #fed7d7;
+  color: #c53030;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-retry {
+  background-color: #c53030;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-retry:hover {
+  background-color: #9c2626;
 }
 
 /* Statistiques */
@@ -329,6 +381,11 @@ body {
     font-size: 2rem;
   }
   
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -358,6 +415,12 @@ body {
   .btn {
     width: 100%;
     justify-content: center;
+  }
+  
+  .error-message {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
   }
 }
 
