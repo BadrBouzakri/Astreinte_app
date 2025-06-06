@@ -56,7 +56,17 @@ function App() {
         throw new Error('Erreur de chargement des données');
       }
       const data = await response.json();
-      setInterventions(data);
+      
+      // Gestion de la réponse API v2.0 qui peut retourner un objet avec interventions
+      if (data.interventions) {
+        setInterventions(data.interventions);
+      } else if (Array.isArray(data)) {
+        // Compatibilité avec ancienne API
+        setInterventions(data);
+      } else {
+        throw new Error('Format de données non reconnu');
+      }
+      
       setError(null);
     } catch (err) {
       setError('Impossible de charger les interventions');
@@ -374,7 +384,7 @@ function App() {
   const genererRapport = () => {
     const stats = obtenirStatistiquesAvancees();
     const rapport = `
-=== RAPPORT D'ACTIVITÉ ASTREINTE ===
+=== RAPPORT D'ACTIVITÉ ASTREINTE v2.0 ===
 Date: ${new Date().toLocaleDateString('fr-FR')}
 
 📊 STATISTIQUES GÉNÉRALES
@@ -392,14 +402,22 @@ Date: ${new Date().toLocaleDateString('fr-FR')}
 • Semaine actuelle: ${calculerTotalSemaineActuelle()}
 • Mois actuel: ${calculerTotalMoisActuel()}
 
-Généré automatiquement par Astreinte App 🚀
+🎫 NOUVEAUTÉS v2.0
+• Gestion des tickets
+• Suivi par client
+• Gestion des serveurs
+• Système de priorités
+• Mode sombre
+• Dashboard temps réel
+
+Généré automatiquement par Astreinte App v2.0 🚀
     `;
 
     const blob = new Blob([rapport], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `rapport_astreinte_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `rapport_astreinte_v2_${new Date().toISOString().split('T')[0]}.txt`;
     a.click();
   };
 
@@ -409,7 +427,8 @@ Généré automatiquement par Astreinte App 🚀
         <div className="container">
           <div className="loading-state">
             <div className="loading-spinner"></div>
-            <h2>⏳ Chargement des données...</h2>
+            <h2>⏳ Chargement des données v2.0...</h2>
+            <p>Initialisation des nouvelles fonctionnalités...</p>
           </div>
         </div>
       </div>
@@ -423,7 +442,7 @@ Généré automatiquement par Astreinte App 🚀
     <div className={`app ${darkMode ? 'dark-mode' : ''}`}>
       <div className="container">
         <div className="header">
-          <h1>🕐 Application Heures d'Astreinte v2.0</h1>
+          <h1>🕐 Astreinte App v2.0</h1>
           <div className="header-actions">
             <div className="view-mode-switcher">
               <button 
@@ -442,7 +461,7 @@ Généré automatiquement par Astreinte App 🚀
             <button 
               onClick={() => setDarkMode(!darkMode)} 
               className="btn btn-theme"
-              title="Changer de thème"
+              title="Basculer le mode sombre"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
@@ -494,7 +513,7 @@ Généré automatiquement par Astreinte App 🚀
         {/* Dashboard Mode */}
         {viewMode === 'dashboard' && (
           <div className="dashboard-section">
-            <h2>📊 Dashboard Temps Réel</h2>
+            <h2>📊 Dashboard Temps Réel v2.0</h2>
             <div className="dashboard-grid">
               <div className="dashboard-card">
                 <h3>⏱️ Métriques de Performance</h3>
@@ -515,6 +534,10 @@ Généré automatiquement par Astreinte App 🚀
                     <span>Serveurs gérés:</span>
                     <strong>{statsAvancees.serveursUniques}</strong>
                   </div>
+                  <div className="metric">
+                    <span>Priorité haute:</span>
+                    <strong>{statsAvancees.highPriorityCount}</strong>
+                  </div>
                 </div>
               </div>
               
@@ -530,10 +553,24 @@ Généré automatiquement par Astreinte App 🚀
                         <div>
                           <strong>{intervention.description}</strong>
                           <br />
-                          <small>{intervention.client} • {calculerDuree(intervention.heureDebut, intervention.heureFin)}</small>
+                          <small>
+                            {intervention.client && `🏢 ${intervention.client} • `}
+                            {intervention.ticket && `🎫 ${intervention.ticket} • `}
+                            ⏱️ {calculerDuree(intervention.heureDebut, intervention.heureFin)}
+                          </small>
                         </div>
                       </div>
                     ))}
+                  {interventions.filter(i => i.date === new Date().toISOString().split('T')[0]).length === 0 && (
+                    <div className="activity-item">
+                      <span className="priority-dot priority-low"></span>
+                      <div>
+                        <strong>Aucune intervention aujourd'hui</strong>
+                        <br />
+                        <small>Profitez de cette journée calme ! 😌</small>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -544,8 +581,8 @@ Généré automatiquement par Astreinte App 🚀
         {showArchives && (
           <div className="archives-section">
             <div className="archives-header">
-              <h2>📈 Archives Détaillées & Statistiques Avancées</h2>
-              <p>Analyse complète de vos performances sur 12 mois</p>
+              <h2>📈 Archives Détaillées & Statistiques v2.0</h2>
+              <p>Analyse complète de vos performances sur 12 mois avec nouvelles métriques</p>
             </div>
 
             {/* Archives mensuelles détaillées */}
@@ -558,6 +595,7 @@ Généré automatiquement par Astreinte App 🚀
                   const interventionsMois = interventions.filter(i => i.date >= mois.debut && i.date <= mois.fin);
                   const urgencesMois = interventionsMois.filter(i => i.type === 'Urgence').length;
                   const clientsUniques = [...new Set(interventionsMois.map(i => i.client).filter(c => c))].length;
+                  const prioriteHaute = interventionsMois.filter(i => i.priority === 'High').length;
                   
                   return (
                     <div key={index} className="monthly-card">
@@ -573,6 +611,10 @@ Généré automatiquement par Astreinte App 🚀
                         <div className="monthly-stat">
                           <span className="stat-icon">🚨</span>
                           <span>{urgencesMois} urgences</span>
+                        </div>
+                        <div className="monthly-stat">
+                          <span className="stat-icon">🔴</span>
+                          <span>{prioriteHaute} priorité haute</span>
                         </div>
                         <div className="monthly-stat">
                           <span className="stat-icon">🏢</span>
@@ -675,7 +717,7 @@ Généré automatiquement par Astreinte App 🚀
 
         {/* Formulaire d'ajout amélioré */}
         <div className="form-container">
-          <h2>➕ {editingId ? 'Modifier' : 'Nouvelle'} Intervention</h2>
+          <h2>➕ {editingId ? 'Modifier' : 'Nouvelle'} Intervention v2.0</h2>
           
           <div className="form-grid">
             <div className="form-group">
@@ -737,7 +779,7 @@ Généré automatiquement par Astreinte App 🚀
                 type="text"
                 value={newIntervention.ticket}
                 onChange={(e) => setNewIntervention({...newIntervention, ticket: e.target.value})}
-                placeholder="Numéro de ticket"
+                placeholder="INC-2025-001, CHG-2025-042..."
               />
             </div>
             
@@ -747,7 +789,7 @@ Généré automatiquement par Astreinte App 🚀
                 type="text"
                 value={newIntervention.client}
                 onChange={(e) => setNewIntervention({...newIntervention, client: e.target.value})}
-                placeholder="Nom du client"
+                placeholder="TechCorp, DataSoft Inc..."
               />
             </div>
             
@@ -757,7 +799,7 @@ Généré automatiquement par Astreinte App 🚀
                 type="text"
                 value={newIntervention.serveur}
                 onChange={(e) => setNewIntervention({...newIntervention, serveur: e.target.value})}
-                placeholder="Nom du serveur"
+                placeholder="PROD-WEB-01, PROD-DB-02..."
               />
             </div>
             
@@ -767,7 +809,7 @@ Généré automatiquement par Astreinte App 🚀
                 type="text"
                 value={newIntervention.description}
                 onChange={(e) => setNewIntervention({...newIntervention, description: e.target.value})}
-                placeholder="Description de l'intervention"
+                placeholder="Description détaillée de l'intervention..."
               />
             </div>
             
@@ -777,7 +819,7 @@ Généré automatiquement par Astreinte App 🚀
                 type="text"
                 value={newIntervention.observations}
                 onChange={(e) => setNewIntervention({...newIntervention, observations: e.target.value})}
-                placeholder="Observations optionnelles"
+                placeholder="Observations, notes, actions de suivi..."
               />
             </div>
           </div>
@@ -815,7 +857,7 @@ Généré automatiquement par Astreinte App 🚀
         {viewMode === 'table' && (
           <div className="table-container">
             <div className="table-header">
-              <h3>📋 Interventions ({filteredInterventions.length})</h3>
+              <h3>📋 Interventions v2.0 ({filteredInterventions.length})</h3>
             </div>
             <table className="interventions-table">
               <thead>
@@ -881,6 +923,9 @@ Généré automatiquement par Astreinte App 🚀
           <div className="empty-state">
             <p>📅 {searchTerm || filterType !== 'all' || filterPriority !== 'all' ? 'Aucun résultat trouvé' : 'Aucune intervention enregistrée'}</p>
             <p>{searchTerm || filterType !== 'all' || filterPriority !== 'all' ? 'Essayez de modifier vos filtres' : 'Ajoutez votre première intervention ci-dessus'}</p>
+            {!searchTerm && filterType === 'all' && filterPriority === 'all' && (
+              <p>🚀 <strong>Nouveau !</strong> Profitez des nouvelles fonctionnalités v2.0 : tickets, clients, serveurs, priorités et mode sombre !</p>
+            )}
           </div>
         )}
       </div>
