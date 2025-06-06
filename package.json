@@ -1,7 +1,7 @@
 {
   "name": "astreinte-app",
-  "version": "1.0.0",
-  "description": "Application de gestion des heures d'astreinte avec backend Node.js",
+  "version": "2.0.0",
+  "description": "🚀 Application avancée de gestion des heures d'astreinte avec backend Node.js - Version 2.0 avec nouvelles fonctionnalités",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -20,7 +20,24 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "serve": "npx serve -s build -l 3000"
+    "serve": "npx serve -s build -l 3000",
+    "dev:full": "concurrently \"npm run dev\" \"npm run server:dev\"",
+    "server:dev": "nodemon server.js",
+    "docker:build": "docker build -t astreinte-app:v2.0 .",
+    "docker:run": "docker run -d -p 3000:3001 -v $(pwd)/data:/app/data --name astreinte-app-v2 astreinte-app:v2.0",
+    "docker:logs": "docker logs -f astreinte-app-v2",
+    "docker:stop": "docker stop astreinte-app-v2 && docker rm astreinte-app-v2",
+    "compose:up": "docker-compose up -d",
+    "compose:down": "docker-compose down",
+    "compose:logs": "docker-compose logs -f",
+    "backup": "node scripts/backup.js",
+    "restore": "node scripts/restore.js",
+    "migrate": "node scripts/migrate.js",
+    "stats": "node scripts/stats.js"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "nodemon": "^3.0.1"
   },
   "eslintConfig": {
     "extends": [
@@ -48,8 +65,48 @@
     "react",
     "docker",
     "backend",
-    "api"
+    "api",
+    "v2.0",
+    "tickets",
+    "clients",
+    "serveurs",
+    "priorités",
+    "dark-mode",
+    "dashboard",
+    "statistics"
   ],
-  "author": "BadrBouzakri",
-  "license": "MIT"
+  "author": {
+    "name": "BadrBouzakri",
+    "email": "badr.bouzakri@example.com",
+    "url": "https://github.com/BadrBouzakri"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BadrBouzakri/Astreinte_app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BadrBouzakri/Astreinte_app/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "config": {
+    "api_version": "2.0",
+    "features": [
+      "Enhanced fields (ticket, client, server)",
+      "Priority system (High, Medium, Low)",
+      "Dark mode support",
+      "Advanced dashboard",
+      "Monthly archives (12 months)",
+      "Quarterly comparison",
+      "Real-time statistics",
+      "Smart search & filters",
+      "Desktop notifications",
+      "Enhanced CSV export",
+      "Automatic data migration",
+      "Performance monitoring"
+    ]
+  }
 }
